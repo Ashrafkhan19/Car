@@ -3,19 +3,23 @@ package com.example.cars.home
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absoluteOffset
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -57,18 +61,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cars.R
 import com.example.cars.ui.theme.CarsTheme
+import com.example.cars.ui.theme.grey
 import com.example.cars.ui.theme.seedColor
 
 
 @Composable
-fun HomeScreen() {
-
-
+fun HomeScreen(
+    onItemClick: () -> Unit
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(seedColor))
+            .background((seedColor))
             .padding(horizontal = 20.dp)
+            .systemBarsPadding()
 
     ) {
 
@@ -87,7 +93,11 @@ fun HomeScreen() {
                 modifier = Modifier.offset(x = (-20).dp, y = 0.dp)
             ) {
                 items(19) {
-                    ArticleCard()
+                    ArticleCard(
+                        modifier = Modifier.clickable {
+                            onItemClick()
+                        }
+                    )
                 }
             }
         }
@@ -112,7 +122,11 @@ fun HomeScreen() {
 
 
         items(10) {
-            ArticleCardHorizontal()
+            ArticleCardHorizontal(
+                modifier = Modifier.clickable {
+                    onItemClick()
+                }
+            )
         }
 
         item {
@@ -269,16 +283,21 @@ private fun ArticleCardHorizontalPreview() {
 }
 
 @Composable
-fun ArticleCard() {
+fun ArticleCard(
+    modifier: Modifier = Modifier
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier
+        modifier = modifier
             .widthIn(max = 320.dp)
             .padding(end = 16.dp)
     ) {
         Column {
-            ArticleImageWithIcons()
+            ArticleImageWithIcons(
+                icon1 = R.drawable.ic_yt,
+                icon2 = R.drawable.ic_star
+            )
 
             Spacer(modifier = Modifier.height(18.dp))
 
@@ -301,7 +320,7 @@ fun SocialCard() {
             .padding(end = 16.dp)
     ) {
         Column {
-            ArticleImageWithIcons(showSecondaryIcon = false)
+            ArticleImageWithIcons(icon1 = R.drawable.ic_gram)
 
             Spacer(modifier = Modifier.height(18.dp))
 
@@ -322,17 +341,21 @@ fun SocialCard() {
 }
 
 @Composable
-fun ArticleCardHorizontal() {
+fun ArticleCardHorizontal(
+    modifier: Modifier = Modifier
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
         shape = RoundedCornerShape(16.dp),
         //elevation = 4.dp,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(end = 16.dp, bottom = 16.dp)
         //.fillMaxWidth()
     ) {
-        Row {
+        Row(
+            modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min)
+        ) {
 
 
             Box {
@@ -345,46 +368,25 @@ fun ArticleCardHorizontal() {
                     contentScale = ContentScale.Crop
                 )
 
-                /*Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp, horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    FilledIconButton(onClick = { *//*TODO*//* }, shape = MaterialTheme.shapes.medium, colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.onBackground)) {
-                        Icon(imageVector = Icons.TwoTone.PlayArrow, contentDescription = "", tint = MaterialTheme.colorScheme.background)
-                    }
-
-                    FilledIconButton(onClick = { *//*TODO*//* }, shape = MaterialTheme.shapes.medium, colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.onBackground)) {
-                        Icon(imageVector = Icons.TwoTone.Star, contentDescription = "", tint = MaterialTheme.colorScheme.background)
-                    }
-                }*/
-
             }
 
             Spacer(modifier = Modifier.height(18.dp))
 
             Column(
-                modifier = Modifier.padding(start = 16.dp)
+                modifier = Modifier.padding(start = 16.dp).fillMaxHeight()
             ) {
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                FilledIconButton(
-                    onClick = { },
-                    shape = MaterialTheme.shapes.small,
-                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.onBackground)
-                ) {
-                    Icon(
-                        imageVector = Icons.TwoTone.PlayArrow,
-                        contentDescription = "",
-                        tint = MaterialTheme.colorScheme.background
-                    )
-                }
+                Image(
+                    painter = painterResource(id = R.drawable.ic_yt),
+                    contentDescription = null,
+                    modifier = Modifier.size(33.dp)
+                )
                 // Category label
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 4.dp)
+                    //modifier = Modifier.padding(horizontal = 4.dp)
                 ) {
                     Canvas(modifier = Modifier.size(13.dp)) {
                         drawCircle(color = Color.Black)
@@ -416,7 +418,7 @@ fun ArticleCardHorizontal() {
                     //modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.weight(1f))
 
                 Text(
                     text = "26 Feb 2024",
@@ -434,7 +436,11 @@ fun ArticleCardHorizontal() {
 }
 
 @Composable
-fun ArticleImageWithIcons(showSecondaryIcon: Boolean = true, isHorizontal: Boolean = false) {
+fun ArticleImageWithIcons(
+    icon1: Int,
+    icon2: Int? = null,
+    isHorizontal: Boolean = false
+) {
     Box {
         Image(
             painter = painterResource(id = R.drawable.car),
@@ -454,34 +460,24 @@ fun ArticleImageWithIcons(showSecondaryIcon: Boolean = true, isHorizontal: Boole
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 16.dp),
+                .padding(vertical = 16.dp, horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            FilledIconButton(
-                onClick = { /*TODO*/ },
-                shape = MaterialTheme.shapes.medium,
-                colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.onBackground)
-            ) {
-                Icon(
-                    imageVector = Icons.TwoTone.PlayArrow,
-                    contentDescription = "",
-                    tint = MaterialTheme.colorScheme.background
+            Image(
+                painter = painterResource(id = icon1),
+                contentDescription = null,
+                modifier = Modifier.size(33.dp)
+            )
+
+            icon2?.let {
+                Image(
+                    painter = painterResource(id = icon2),
+                    contentDescription = null,
+                    modifier = Modifier.size(33.dp)
                 )
             }
 
-            if (showSecondaryIcon) {
-                FilledIconButton(
-                    onClick = { /*TODO*/ },
-                    shape = MaterialTheme.shapes.medium,
-                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.onBackground)
-                ) {
-                    Icon(
-                        imageVector = Icons.TwoTone.Star,
-                        contentDescription = "",
-                        tint = MaterialTheme.colorScheme.background
-                    )
-                }
-            }
+
         }
     }
 }
@@ -542,12 +538,13 @@ fun CarTopAppBar(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background),
+            //.background(MaterialTheme.colorScheme.background)
+        ,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
             painter = painterResource(
-                id = R.drawable.ic_launcher_playstore
+                id = R.drawable.ic_logo
             ), contentDescription = "", modifier = Modifier.size(43.dp)
         )
 
@@ -569,6 +566,8 @@ fun CarTopAppBarPreview() {
 @Composable
 private fun HomeScreenPreview() {
     CarsTheme {
-        HomeScreen()
+        HomeScreen() {
+
+        }
     }
 }

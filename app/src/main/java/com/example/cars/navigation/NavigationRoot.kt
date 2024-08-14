@@ -6,6 +6,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.example.cars.auth.AuthScreen
+import com.example.cars.home.ArticleDetailScreen
+import com.example.cars.home.HomeScreen
 import com.example.cars.screens.Screens
 
 @Composable
@@ -13,31 +16,29 @@ fun NavigationRoot(navController: NavHostController) {
 
     NavHost(navController = navController, startDestination = Screens.LoginOrSignUp) {
 
-        authGraph()
-    }
-
-}
-
-
-private fun NavGraphBuilder.authGraph() {
-    navigation<Screens.LoginOrSignUp>(startDestination = Screens.LoginOrSignUp) {
-
-        composable<Screens.LoginOrSignUp> {
-
-        }
-    }
-}
-
-
-private fun NavGraphBuilder.homeGraph() {
-    navigation<Screens.Home>(startDestination = Screens.Home) {
-
         composable<Screens.Home> {
-
+            HomeScreen(onItemClick = {
+                navController.navigate(Screens.ArticleDetail)
+            })
         }
 
         composable<Screens.ArticleDetail> {
-
+            ArticleDetailScreen(onBack = {
+                navController.navigateUp()
+            })
         }
+
+        composable<Screens.LoginOrSignUp> {
+            AuthScreen(
+                onLoginClick = {
+                navController.navigate(Screens.Home)
+            }, onSignUpClick = {
+                    navController.navigate(Screens.Home)
+            })
+        }
+
     }
+
 }
+
+
