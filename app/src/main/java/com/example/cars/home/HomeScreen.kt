@@ -1,9 +1,13 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.example.cars.home
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +42,8 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -73,8 +79,9 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background((seedColor))
-            .padding(horizontal = 20.dp)
-            .systemBarsPadding()
+            .padding(start = 20.dp)
+            .systemBarsPadding(),
+        //contentPadding = PaddingValues(horizontal = 20.dp)
 
     ) {
 
@@ -88,16 +95,21 @@ fun HomeScreen(
         }
 
         item {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                modifier = Modifier.offset(x = (-20).dp, y = 0.dp)
-            ) {
-                items(19) {
-                    ArticleCard(
-                        modifier = Modifier.clickable {
-                            onItemClick()
-                        }
+            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp),
+                modifier = Modifier.layout { measurable, constraints ->
+                    val placeable = measurable.measure(
+                        constraints.copy(
+                            maxWidth = constraints.maxWidth + 40.dp.roundToPx(),
+                        )
                     )
+                    layout(placeable.width, placeable.height) {
+                        placeable.place(0.dp.roundToPx(), 0)
+                    }
+                }) {
+                items(19) {
+                    ArticleCard(modifier = Modifier.clickable {
+                        onItemClick()
+                    })
                 }
             }
         }
@@ -123,9 +135,7 @@ fun HomeScreen(
 
         items(10) {
             ArticleCardHorizontal(
-                modifier = Modifier.clickable {
-                    onItemClick()
-                }
+                modifier = Modifier, onItemClick = onItemClick
             )
         }
 
@@ -146,7 +156,9 @@ fun HomeScreen(
                 ) {
                     Text(
                         text = "View All", style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.W500, lineHeight = 18.sp, fontSize = 12.sp,
+                            fontWeight = FontWeight.W500,
+                            lineHeight = 18.sp,
+                            fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                     )
@@ -160,33 +172,36 @@ fun HomeScreen(
 
         item {
 
-            Column(
-                modifier = Modifier
-                    .layout { measurable, constraints ->
-                        val placeable = measurable.measure(
-                            constraints.copy(
-                                maxWidth = constraints.maxWidth + 40.dp.roundToPx(), //add the end padding 16.dp
-                            )
+            Column(modifier = Modifier
+                .layout { measurable, constraints ->
+                    val placeable = measurable.measure(
+                        constraints.copy(
+                            maxWidth = constraints.maxWidth + 40.dp.roundToPx(),
                         )
-                        layout(placeable.width, placeable.height) {
-                            placeable.place(0.dp.roundToPx(), 0)
-                        }
+                    )
+                    layout(placeable.width, placeable.height) {
+                        placeable.place(0.dp.roundToPx(), 0)
                     }
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.onBackground)
-                    .padding(vertical = 64.dp, horizontal = 12.dp)
-            ) {
+                }
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.onBackground)
+                .padding(vertical = 64.dp, horizontal = 12.dp)) {
 
                 Text(
                     text = "Social Connect", style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.W700, lineHeight = 30.sp, fontSize = 22.sp,
+                        fontWeight = FontWeight.W700,
+                        lineHeight = 30.sp,
+                        fontSize = 22.sp,
                         color = MaterialTheme.colorScheme.background
                     )
                 )
 
                 Text(
-                    text = "Stay update with my latest post \non your favorite platforms", style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.W400, lineHeight = 21.sp, fontSize = 16.sp,
+                    text = "Stay update with my latest post \non your favorite platforms",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.W400,
+                        lineHeight = 21.sp,
+                        fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.background
                     )
                 )
@@ -205,10 +220,6 @@ fun HomeScreen(
             }
 
         }
-
-
-
-
 
 
     }
@@ -278,7 +289,7 @@ private fun SocialCardPreview() {
 private fun ArticleCardHorizontalPreview() {
     CarsTheme {
 
-        ArticleCardHorizontal()
+        ArticleCardHorizontal {}
     }
 }
 
@@ -295,8 +306,7 @@ fun ArticleCard(
     ) {
         Column {
             ArticleImageWithIcons(
-                icon1 = R.drawable.ic_yt,
-                icon2 = R.drawable.ic_star
+                icon1 = R.drawable.ic_yt, icon2 = R.drawable.ic_star
             )
 
             Spacer(modifier = Modifier.height(18.dp))
@@ -342,104 +352,149 @@ fun SocialCard() {
 
 @Composable
 fun ArticleCardHorizontal(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onItemClick: () -> Unit,
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
-        shape = RoundedCornerShape(16.dp),
-        //elevation = 4.dp,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(end = 16.dp, bottom = 16.dp)
-        //.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min)
+    var isLongPressed by remember {
+        mutableStateOf(false)
+    }
+    val drawable = listOf(
+        R.drawable.bookmark,
+        R.drawable.tv,
+        R.drawable.bell,
+        
+        R.drawable.user,
+    )
+    Box {
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+            shape = RoundedCornerShape(16.dp),
+            //elevation = 4.dp,
+            modifier = modifier
+                .fillMaxWidth(.97f)
+                .padding(bottom = 16.dp)
+                .combinedClickable(onClick = {
+                    isLongPressed = false
+                    onItemClick()
+                }, onLongClick = {
+                    isLongPressed = !isLongPressed
+                })
+            //.fillMaxWidth()
         ) {
-
-
-            Box {
-                Image(
-                    painter = painterResource(id = R.drawable.car),
-                    contentDescription = "",
-                    modifier = Modifier
-                        .fillMaxWidth(.45f)
-                        .height(353.dp),
-                    contentScale = ContentScale.Crop
-                )
-
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            Column(
-                modifier = Modifier.padding(start = 16.dp).fillMaxHeight()
+            Row(
+                modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min)
             ) {
 
-                Spacer(modifier = Modifier.height(12.dp))
 
-                Image(
-                    painter = painterResource(id = R.drawable.ic_yt),
-                    contentDescription = null,
-                    modifier = Modifier.size(33.dp)
-                )
-                // Category label
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    //modifier = Modifier.padding(horizontal = 4.dp)
+                Box {
+                    Image(
+                        painter = painterResource(id = R.drawable.car),
+                        contentDescription = "",
+                        modifier = Modifier
+                            .fillMaxWidth(.45f)
+                            .height(353.dp),
+                        contentScale = ContentScale.Crop
+                    )
+
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                Column(
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .fillMaxHeight()
                 ) {
-                    Canvas(modifier = Modifier.size(13.dp)) {
-                        drawCircle(color = Color.Black)
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_yt),
+                        contentDescription = null,
+                        modifier = Modifier.size(33.dp)
+                    )
+                    // Category label
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        //modifier = Modifier.padding(horizontal = 4.dp)
+                    ) {
+                        Canvas(modifier = Modifier.size(13.dp)) {
+                            drawCircle(color = Color.Black)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "technology",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.W500, fontSize = 14.sp, lineHeight = 31.5.sp
+                            ),
+                        )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+
+
                     Text(
-                        text = "technology",
+                        text = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    fontWeight = FontWeight.W700,
+                                )
+                            ) {
+                                append("Step Into Tomorrow: ")
+                            }
+                            append("Exploring Spatial Computing’s Impact On Industries And The Metaverse!")
+                        },
                         style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.W500, fontSize = 14.sp, lineHeight = 31.5.sp
+                            fontWeight = FontWeight.W500, fontSize = 16.sp, lineHeight = 24.sp
                         ),
+                        //modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Text(
+                        text = "26 Feb 2024",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.W500, fontSize = 12.sp,
+                        ),
+                        color = Color(0xFF929292),
+                        modifier = Modifier.padding(horizontal = 0.dp, vertical = 8.dp)
                     )
                 }
 
 
-                Text(
-                    text = buildAnnotatedString {
-                        withStyle(
-                            style = SpanStyle(
-                                fontWeight = FontWeight.W700,
-                            )
-                        ) {
-                            append("Step Into Tomorrow: ")
-                        }
-                        append("Exploring Spatial Computing’s Impact On Industries And The Metaverse!")
-                    },
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.W500, fontSize = 16.sp, lineHeight = 24.sp
-                    ),
-                    //modifier = Modifier.padding(horizontal = 16.dp)
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Text(
-                    text = "26 Feb 2024",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.W500, fontSize = 12.sp,
-                    ),
-                    color = Color(0xFF929292),
-                    modifier = Modifier.padding(horizontal = 0.dp, vertical = 8.dp)
-                )
             }
+        }
 
+        if (isLongPressed) {
 
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(.94f)
+                    .align(Alignment.Center),
+                shape = MaterialTheme.shapes.extraLarge,
+                //tonalElevation = 8.dp,
+                shadowElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    drawable.forEach {
+                        Image(
+                            painter = painterResource(id = it),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
 fun ArticleImageWithIcons(
-    icon1: Int,
-    icon2: Int? = null,
-    isHorizontal: Boolean = false
+    icon1: Int, icon2: Int? = null, isHorizontal: Boolean = false
 ) {
     Box {
         Image(
@@ -493,11 +548,9 @@ fun ArticleContent(category: String, title: String, date: String) {
                     append("Step Into Tomorrow: ")
                 }
                 append(title)
-            },
-            style = MaterialTheme.typography.headlineSmall.copy(
+            }, style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.W500, fontSize = 16.sp, lineHeight = 24.sp
-            ),
-            modifier = Modifier.padding(horizontal = 16.dp)
+            ), modifier = Modifier.padding(horizontal = 16.dp)
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -536,11 +589,9 @@ fun CategoryLabel(category: String) {
 @Composable
 fun CarTopAppBar(modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            //.background(MaterialTheme.colorScheme.background)
-        ,
-        verticalAlignment = Alignment.CenterVertically
+        modifier = modifier.fillMaxWidth()
+        //.background(MaterialTheme.colorScheme.background)
+        , verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
             painter = painterResource(
@@ -566,7 +617,7 @@ fun CarTopAppBarPreview() {
 @Composable
 private fun HomeScreenPreview() {
     CarsTheme {
-        HomeScreen() {
+        HomeScreen {
 
         }
     }
